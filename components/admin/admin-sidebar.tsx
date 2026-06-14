@@ -4,14 +4,18 @@ import Link from "next/link"
 import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import {
-  LayoutDashboard,
-  Newspaper,
-  Camera,
-  Video,
+  Home,
+  Info,
   Clock,
+  BookOpen,
+  Newspaper,
+  Church,
+  FileText,
+  Clapperboard,
+  Phone,
   Settings,
   LogOut,
-  ExternalLink,
+  ChevronRight,
 } from "lucide-react"
 import {
   Sidebar,
@@ -24,15 +28,81 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
 
-const navItems = [
-  { title: "Overview", href: "/admin/dashboard", icon: LayoutDashboard },
+type SubItem = { title: string; href: string }
+type NavItem = {
+  title: string
+  href: string
+  icon: typeof Home
+  items?: SubItem[]
+}
+
+const navItems: NavItem[] = [
+  { title: "Home", href: "/admin/dashboard", icon: Home },
+  {
+    title: "About",
+    href: "/admin/dashboard/about",
+    icon: Info,
+    items: [
+      { title: "The Parish", href: "/admin/dashboard/about/parish" },
+      { title: "History", href: "/admin/dashboard/about/history" },
+      { title: "The Vicar", href: "/admin/dashboard/about/vicar" },
+      {
+        title: "Blessed Patriarch Douaihy",
+        href: "/admin/dashboard/about/douaihy",
+      },
+    ],
+  },
   { title: "Mass Times", href: "/admin/dashboard/mass-times", icon: Clock },
-  { title: "News & Articles", href: "/admin/dashboard/news", icon: Newspaper },
-  { title: "Photo Gallery", href: "/admin/dashboard/gallery", icon: Camera },
-  { title: "Videos", href: "/admin/dashboard/videos", icon: Video },
+  { title: "Yanabi3", href: "/admin/dashboard/yanabi3", icon: BookOpen },
+  { title: "News", href: "/admin/dashboard/news", icon: Newspaper },
+  { title: "Churches", href: "/admin/dashboard/churches", icon: Church },
+  {
+    title: "Services",
+    href: "/admin/dashboard/services",
+    icon: FileText,
+    items: [
+      { title: "Overview", href: "/admin/dashboard/services" },
+      {
+        title: "The First Sacrifice",
+        href: "/admin/dashboard/services/first-sacrifice",
+      },
+      {
+        title: "Marriage Certificate",
+        href: "/admin/dashboard/services/marriage-certificate",
+      },
+      {
+        title: "Certificate of Confirmation",
+        href: "/admin/dashboard/services/confirmation-certificate",
+      },
+      {
+        title: "Death Certificate",
+        href: "/admin/dashboard/services/death-certificate",
+      },
+    ],
+  },
+  {
+    title: "Media",
+    href: "/admin/dashboard/media",
+    icon: Clapperboard,
+    items: [
+      { title: "Zgharta Channel", href: "/admin/dashboard/media/zgharta-channel" },
+      { title: "Radio Ehden", href: "/admin/dashboard/media/radio-ehden" },
+      { title: "Photo Gallery", href: "/admin/dashboard/gallery" },
+      { title: "Videos", href: "/admin/dashboard/videos" },
+    ],
+  },
+  { title: "Contact", href: "/admin/dashboard/contact", icon: Phone },
 ]
 
 const secondaryItems = [
@@ -46,7 +116,10 @@ export function AdminSidebar() {
   const isActive = (href: string) =>
     href === "/admin/dashboard"
       ? pathname === href
-      : pathname.startsWith(href)
+      : pathname === href
+
+  const isGroupActive = (item: NavItem) =>
+    item.items?.some((sub) => pathname === sub.href) ?? false
 
   return (
     <Sidebar collapsible="icon">
@@ -74,23 +147,57 @@ export function AdminSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Content</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
+              {navItems.map((item) =>
+                item.items ? (
+                  <Collapsible
+                    key={item.href}
                     asChild
-                    isActive={isActive(item.href)}
-                    tooltip={item.title}
+                    defaultOpen={isGroupActive(item)}
+                    className="group/collapsible"
                   >
-                    <Link href={item.href}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                    <SidebarMenuItem>
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton tooltip={item.title}>
+                          <item.icon className="h-4 w-4" />
+                          <span>{item.title}</span>
+                          <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {item.items.map((sub) => (
+                            <SidebarMenuSubItem key={sub.href}>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={pathname === sub.href}
+                              >
+                                <Link href={sub.href}>
+                                  <span>{sub.title}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </SidebarMenuItem>
+                  </Collapsible>
+                ) : (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive(item.href)}
+                      tooltip={item.title}
+                    >
+                      <Link href={item.href}>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ),
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -113,14 +220,6 @@ export function AdminSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip="View Website">
-                  <Link href="/" target="_blank">
-                    <ExternalLink className="h-4 w-4" />
-                    <span>View Website</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
