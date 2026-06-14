@@ -303,7 +303,21 @@ export default function MassTimesAdminPage() {
   return (
     <div className="flex flex-col gap-8">
       {/* Header */}
-      <div className="flex items-center justify-end">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex flex-wrap items-baseline gap-3">
+            <h1 className="font-serif text-2xl font-bold text-foreground">
+              Mass Times
+            </h1>
+            <span className="font-serif text-xl text-muted-foreground">
+              مواعيد القداس
+            </span>
+          </div>
+          <p className="mt-1 text-muted-foreground">
+            Manage the mass schedule for every church and upcoming special
+            celebrations.
+          </p>
+        </div>
         <Button
           onClick={openCreateChurch}
           size="lg"

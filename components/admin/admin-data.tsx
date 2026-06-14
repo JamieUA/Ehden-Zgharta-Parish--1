@@ -61,7 +61,27 @@ export interface SpecialMassItem {
   location: string
 }
 
+export interface Yanabi3Item {
+  id: string
+  title: string
+  titleAr: string
+  season: string
+  date: string
+  year: number
+  fileUrl: string
+  status: Status
+}
+
 export const massLocations = ["Ehden", "Zgharta"]
+
+export const yanabi3Seasons = [
+  { value: "resurrection", label: "Resurrection", labelAr: "زمن القيامة" },
+  { value: "pentecost", label: "Pentecost", labelAr: "زمن العنصرة" },
+  { value: "cross", label: "Cross", labelAr: "زمن الصليب" },
+  { value: "christmas", label: "Christmas", labelAr: "زمن الميلاد" },
+  { value: "epiphany", label: "Epiphany", labelAr: "زمن الدنح" },
+  { value: "lent", label: "Lent", labelAr: "زمن الصوم" },
+]
 
 export const newsCategories = [
   "Parish News",
@@ -257,12 +277,56 @@ const seedSpecialMasses: SpecialMassItem[] = [
   },
 ]
 
+const seedYanabi3: Yanabi3Item[] = [
+  {
+    id: "y1",
+    title: "Third Sunday of Resurrection",
+    titleAr: "الأحد الثالث من القيامة",
+    season: "resurrection",
+    date: "2026-04-06",
+    year: 2026,
+    fileUrl: "/bulletins/yanabi3-2026-04-06.pdf",
+    status: "published",
+  },
+  {
+    id: "y2",
+    title: "Easter Sunday",
+    titleAr: "أحد الفصح",
+    season: "resurrection",
+    date: "2026-03-23",
+    year: 2026,
+    fileUrl: "/bulletins/yanabi3-2026-03-23.pdf",
+    status: "published",
+  },
+  {
+    id: "y3",
+    title: "Palm Sunday",
+    titleAr: "أحد الشعانين",
+    season: "lent",
+    date: "2026-03-16",
+    year: 2026,
+    fileUrl: "/bulletins/yanabi3-2026-03-16.pdf",
+    status: "published",
+  },
+  {
+    id: "y4",
+    title: "Feast of Epiphany",
+    titleAr: "عيد الدنح",
+    season: "epiphany",
+    date: "2026-01-06",
+    year: 2026,
+    fileUrl: "/bulletins/yanabi3-2026-01-06.pdf",
+    status: "draft",
+  },
+]
+
 interface AdminStore {
   news: NewsItem[]
   photos: PhotoItem[]
   videos: VideoItem[]
   massChurches: MassChurchItem[]
   specialMasses: SpecialMassItem[]
+  yanabi3: Yanabi3Item[]
   addNews: (item: Omit<NewsItem, "id">) => void
   updateNews: (id: string, item: Omit<NewsItem, "id">) => void
   deleteNews: (id: string) => void
@@ -278,6 +342,9 @@ interface AdminStore {
   addSpecialMass: (item: Omit<SpecialMassItem, "id">) => void
   updateSpecialMass: (id: string, item: Omit<SpecialMassItem, "id">) => void
   deleteSpecialMass: (id: string) => void
+  addYanabi3: (item: Omit<Yanabi3Item, "id">) => void
+  updateYanabi3: (id: string, item: Omit<Yanabi3Item, "id">) => void
+  deleteYanabi3: (id: string) => void
 }
 
 const AdminDataContext = createContext<AdminStore | null>(null)
@@ -292,6 +359,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     useState<MassChurchItem[]>(seedMassChurches)
   const [specialMasses, setSpecialMasses] =
     useState<SpecialMassItem[]>(seedSpecialMasses)
+  const [yanabi3, setYanabi3] = useState<Yanabi3Item[]>(seedYanabi3)
 
   const addNews = useCallback(
     (item: Omit<NewsItem, "id">) =>
@@ -374,6 +442,23 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
     [],
   )
 
+  const addYanabi3 = useCallback(
+    (item: Omit<Yanabi3Item, "id">) =>
+      setYanabi3((prev) => [{ ...item, id: uid() }, ...prev]),
+    [],
+  )
+  const updateYanabi3 = useCallback(
+    (id: string, item: Omit<Yanabi3Item, "id">) =>
+      setYanabi3((prev) =>
+        prev.map((y) => (y.id === id ? { ...item, id } : y)),
+      ),
+    [],
+  )
+  const deleteYanabi3 = useCallback(
+    (id: string) => setYanabi3((prev) => prev.filter((y) => y.id !== id)),
+    [],
+  )
+
   return (
     <AdminDataContext.Provider
       value={{
@@ -382,6 +467,7 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
         videos,
         massChurches,
         specialMasses,
+        yanabi3,
         addNews,
         updateNews,
         deleteNews,
@@ -397,6 +483,9 @@ export function AdminDataProvider({ children }: { children: ReactNode }) {
         addSpecialMass,
         updateSpecialMass,
         deleteSpecialMass,
+        addYanabi3,
+        updateYanabi3,
+        deleteYanabi3,
       }}
     >
       {children}
