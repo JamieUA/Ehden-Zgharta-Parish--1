@@ -233,168 +233,175 @@ export default function MassTimesAdminPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-serif text-2xl font-bold text-foreground">
-            Mass Times
-          </h1>
-          <p className="mt-1 text-muted-foreground">
-            Manage the mass schedule for every church and upcoming special
-            celebrations.
-          </p>
+      {/* Hero banner — mirrors the public Mass Times page */}
+      <div className="relative overflow-hidden rounded-2xl bg-primary px-6 py-10 text-primary-foreground shadow-lg sm:px-10">
+        <Clock
+          className="pointer-events-none absolute -right-6 -top-6 h-48 w-48 rotate-12 opacity-10"
+          aria-hidden="true"
+        />
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <Badge variant="secondary" className="mb-3">
+              Join Us in Prayer
+            </Badge>
+            <h1 className="font-serif text-3xl font-bold sm:text-4xl">
+              Mass Times
+            </h1>
+            <p className="mt-2 text-xl font-light text-secondary" dir="rtl">
+              مواعيد القداس
+            </p>
+            <p className="mt-3 max-w-xl text-sm text-primary-foreground/80">
+              Manage the mass schedule for every church and the upcoming special
+              celebrations shown on the website.
+            </p>
+          </div>
+          <Button
+            onClick={openCreateChurch}
+            size="lg"
+            className="bg-secondary text-secondary-foreground shadow-md hover:bg-secondary/90"
+          >
+            <Plus className="h-4 w-4" />
+            Add Church
+          </Button>
         </div>
-        <Button onClick={openCreateChurch}>
-          <Plus className="h-4 w-4" />
-          Add Church
-        </Button>
       </div>
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Church className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">
-                {massChurches.length}
-              </p>
-              <p className="text-sm text-muted-foreground">Churches</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Clock className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">
-                {totalServices}
-              </p>
-              <p className="text-sm text-muted-foreground">Weekly services</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Sparkles className="h-6 w-6" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">
-                {specialMasses.length}
-              </p>
-              <p className="text-sm text-muted-foreground">Special masses</p>
-            </div>
-          </CardContent>
-        </Card>
+        {[
+          { icon: Church, value: massChurches.length, label: "Churches" },
+          { icon: Clock, value: totalServices, label: "Weekly services" },
+          { icon: Sparkles, value: specialMasses.length, label: "Special masses" },
+        ].map((stat) => (
+          <Card key={stat.label} className="border-none shadow-md">
+            <CardContent className="flex items-center gap-4 p-6">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <stat.icon className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                <p className="text-sm text-muted-foreground">{stat.label}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Search */}
-      <div className="relative w-full sm:max-w-xs">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Search churches..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
-        />
-      </div>
+      {/* Regular schedule section */}
+      <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-serif text-xl font-bold text-foreground">
+              Regular Mass Schedule
+            </h2>
+            <div className="mt-2 h-1 w-16 rounded-full bg-secondary" />
+          </div>
+          <div className="relative w-full sm:max-w-xs">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search churches..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </div>
 
-      {/* Church schedule grid */}
-      {filtered.length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((church) => (
-            <Card key={church.id} className="flex flex-col">
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <CardTitle className="font-serif text-lg leading-tight">
-                      {church.church}
-                    </CardTitle>
-                    <p
-                      className="mt-1 text-sm text-muted-foreground"
-                      dir="rtl"
-                    >
-                      {church.churchAr}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="flex shrink-0 items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    {church.location}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="flex flex-1 flex-col">
-                <div className="space-y-2">
-                  {church.schedule.map((row, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-start justify-between gap-2 border-b border-border py-2 last:border-0"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        <span className="text-sm font-medium">{row.day}</span>
-                      </div>
-                      <div className="flex flex-wrap justify-end gap-1">
-                        {row.times.map((time, tidx) => (
-                          <Badge key={tidx} variant="secondary">
-                            {time}
-                          </Badge>
-                        ))}
-                      </div>
+        {/* Church schedule grid — styled like the website cards */}
+        {filtered.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {filtered.map((church) => (
+              <Card
+                key={church.id}
+                className="group flex flex-col border-none shadow-lg transition-shadow hover:shadow-xl"
+              >
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <CardTitle className="font-serif text-xl leading-tight">
+                        {church.church}
+                      </CardTitle>
+                      <p className="mt-1 text-sm text-muted-foreground" dir="rtl">
+                        {church.churchAr}
+                      </p>
                     </div>
-                  ))}
-                </div>
-                <div className="mt-3 flex items-center gap-2 border-t border-dashed pt-3 text-sm">
-                  <Church className="h-4 w-4 shrink-0 text-secondary" />
-                  <span className="text-muted-foreground">Confession:</span>
-                  <span className="font-medium">{church.confession || "—"}</span>
-                </div>
-                <div className="mt-4 flex justify-end gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => openEditChurch(church)}
-                    aria-label="Edit church schedule"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setDeleteChurchId(church.id)}
-                    aria-label="Delete church"
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-lg border border-dashed py-16 text-center">
-          <Church className="mx-auto mb-3 h-12 w-12 text-muted-foreground/30" />
-          <p className="text-sm text-muted-foreground">No churches found.</p>
-        </div>
-      )}
+                    <Badge
+                      variant="outline"
+                      className="flex shrink-0 items-center gap-1"
+                    >
+                      <MapPin className="h-3 w-3" />
+                      {church.location}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="flex flex-1 flex-col">
+                  <div className="space-y-1">
+                    {church.schedule.map((row, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-start justify-between gap-2 border-b border-border py-2 last:border-0"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <span className="text-sm font-medium">{row.day}</span>
+                        </div>
+                        <div className="flex flex-wrap justify-end gap-1">
+                          {row.times.map((time, tidx) => (
+                            <Badge key={tidx} variant="secondary">
+                              {time}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-auto flex items-center gap-2 border-t border-dashed pt-3 text-sm">
+                    <Church className="h-4 w-4 shrink-0 text-secondary" />
+                    <span className="text-muted-foreground">Confession:</span>
+                    <span className="font-medium">{church.confession || "—"}</span>
+                  </div>
+                  <div className="mt-4 flex justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => openEditChurch(church)}
+                      aria-label="Edit church schedule"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setDeleteChurchId(church.id)}
+                      aria-label="Delete church"
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed py-16 text-center">
+            <Church className="mx-auto mb-3 h-12 w-12 text-muted-foreground/30" />
+            <p className="text-sm text-muted-foreground">No churches found.</p>
+          </div>
+        )}
+      </div>
 
       <Separator />
 
       {/* Special celebrations */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="font-serif text-xl font-bold text-foreground">
-              Special Celebrations
+              Upcoming Special Celebrations
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Feast days and upcoming special masses shown on the website.
+              Feast days and special masses highlighted on the website.
             </p>
           </div>
           <Button variant="outline" onClick={openCreateSpecial}>
@@ -406,13 +413,16 @@ export default function MassTimesAdminPage() {
         {specialMasses.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {specialMasses.map((mass) => (
-              <Card key={mass.id} className="bg-muted/40">
-                <CardContent className="p-5">
+              <Card
+                key={mass.id}
+                className="group border-none bg-card shadow-md transition-shadow hover:shadow-lg"
+              >
+                <CardContent className="p-6">
                   <div className="flex items-start justify-between gap-2">
                     <Badge className="bg-secondary text-secondary-foreground">
                       Special Mass
                     </Badge>
-                    <div className="flex gap-1">
+                    <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
                       <Button
                         variant="ghost"
                         size="icon"
@@ -436,7 +446,7 @@ export default function MassTimesAdminPage() {
                   <h3 className="mt-3 font-serif text-lg font-semibold">
                     {mass.title}
                   </h3>
-                  <div className="mt-2 space-y-1.5 text-sm text-muted-foreground">
+                  <div className="mt-3 space-y-2 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 shrink-0" />
                       {mass.date}
