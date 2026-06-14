@@ -53,6 +53,7 @@ import {
   type SpecialMassItem,
   type MassScheduleRow,
 } from "@/components/admin/admin-data"
+import { DashboardHero } from "@/components/admin/dashboard-hero"
 
 // ---------- Options ----------
 const DAY_OPTIONS = [
@@ -303,30 +304,23 @@ export default function MassTimesAdminPage() {
   return (
     <div className="flex flex-col gap-8">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex flex-wrap items-baseline gap-3">
-            <h1 className="font-serif text-2xl font-bold text-foreground">
-              Mass Times
-            </h1>
-            <span className="font-serif text-xl text-muted-foreground">
-              مواعيد القداس
-            </span>
-          </div>
-          <p className="mt-1 text-muted-foreground">
-            Manage the mass schedule for every church and upcoming special
-            celebrations.
-          </p>
-        </div>
-        <Button
-          onClick={openCreateChurch}
-          size="lg"
-          className="bg-secondary text-secondary-foreground shadow-md hover:bg-secondary/90"
-        >
-          <Plus className="h-4 w-4" />
-          Add Church
-        </Button>
-      </div>
+      <DashboardHero
+        badge="Join Us in Prayer"
+        title="Mass Times"
+        titleAr="مواعيد القداس"
+        description="Manage the mass schedule for every church and the upcoming special celebrations shown on the website."
+        icon={Clock}
+        action={
+          <Button
+            onClick={openCreateChurch}
+            size="lg"
+            className="bg-secondary text-secondary-foreground shadow-md hover:bg-secondary/90"
+          >
+            <Plus className="h-4 w-4" />
+            Add Church
+          </Button>
+        }
+      />
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">

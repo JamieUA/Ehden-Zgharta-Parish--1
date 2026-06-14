@@ -15,9 +15,12 @@ export interface NewsItem {
   title: string
   titleAr: string
   excerpt: string
+  content?: string
+  author?: string
   category: string
   date: string
   image: string
+  featured?: boolean
   status: Status
 }
 
