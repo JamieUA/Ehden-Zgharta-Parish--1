@@ -6,13 +6,10 @@ import {
   Plus,
   Pencil,
   Trash2,
-  Search,
   Clock,
   Calendar,
-  Church,
   MapPin,
   Sparkles,
-  X,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -40,29 +37,18 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import {
   useAdminData,
-  massLocations,
-  type MassChurchItem,
   type SpecialMassItem,
   type MassScheduleRow,
 } from "@/components/admin/admin-data"
 
-// ---------- Church form ----------
-type ChurchForm = Omit<MassChurchItem, "id">
+// ---------- Schedule row form ----------
+type RowForm = Omit<MassScheduleRow, "id">
 
-const emptyChurchForm: ChurchForm = {
-  church: "",
-  churchAr: "",
-  location: massLocations[0],
-  schedule: [{ day: "", times: [""] }],
-  confession: "",
+const emptyRowForm: RowForm = {
+  day: "",
+  times: [""],
+  note: "",
 }
 
 // ---------- Special mass form ----------
@@ -77,23 +63,21 @@ const emptySpecialForm: SpecialForm = {
 
 export default function MassTimesAdminPage() {
   const {
-    massChurches,
+    massSchedule,
     specialMasses,
-    addMassChurch,
-    updateMassChurch,
-    deleteMassChurch,
+    addMassRow,
+    updateMassRow,
+    deleteMassRow,
     addSpecialMass,
     updateSpecialMass,
     deleteSpecialMass,
   } = useAdminData()
 
-  const [search, setSearch] = useState("")
-
-  // Church dialog state
-  const [churchDialogOpen, setChurchDialogOpen] = useState(false)
-  const [editingChurchId, setEditingChurchId] = useState<string | null>(null)
-  const [churchForm, setChurchForm] = useState<ChurchForm>(emptyChurchForm)
-  const [deleteChurchId, setDeleteChurchId] = useState<string | null>(null)
+  // Schedule dialog state
+  const [rowDialogOpen, setRowDialogOpen] = useState(false)
+  const [editingRowId, setEditingRowId] = useState<string | null>(null)
+  const [rowForm, setRowForm] = useState<RowForm>(emptyRowForm)
+  const [deleteRowId, setDeleteRowId] = useState<string | null>(null)
 
   // Special dialog state
   const [specialDialogOpen, setSpecialDialogOpen] = useState(false)
@@ -101,92 +85,51 @@ export default function MassTimesAdminPage() {
   const [specialForm, setSpecialForm] = useState<SpecialForm>(emptySpecialForm)
   const [deleteSpecialId, setDeleteSpecialId] = useState<string | null>(null)
 
-  const filtered = massChurches.filter(
-    (m) =>
-      m.church.toLowerCase().includes(search.toLowerCase()) ||
-      m.location.toLowerCase().includes(search.toLowerCase()),
-  )
-
-  const totalServices = massChurches.reduce(
-    (sum, c) => sum + c.schedule.reduce((s, row) => s + row.times.length, 0),
+  const totalServices = massSchedule.reduce(
+    (sum, row) => sum + row.times.length,
     0,
   )
 
-  // ---------- Church handlers ----------
-  function openCreateChurch() {
-    setEditingChurchId(null)
-    setChurchForm(emptyChurchForm)
-    setChurchDialogOpen(true)
+  // ---------- Schedule handlers ----------
+  function openCreateRow() {
+    setEditingRowId(null)
+    setRowForm(emptyRowForm)
+    setRowDialogOpen(true)
   }
 
-  function openEditChurch(item: MassChurchItem) {
-    setEditingChurchId(item.id)
-    const { id, ...rest } = item
-    // deep clone schedule so edits don't mutate the store
-    setChurchForm({
-      ...rest,
-      schedule: rest.schedule.map((r) => ({ day: r.day, times: [...r.times] })),
-    })
-    setChurchDialogOpen(true)
+  function openEditRow(item: MassScheduleRow) {
+    setEditingRowId(item.id)
+    setRowForm({ day: item.day, times: [...item.times], note: item.note })
+    setRowDialogOpen(true)
   }
 
-  function updateScheduleRow(index: number, patch: Partial<MassScheduleRow>) {
-    setChurchForm((prev) => ({
-      ...prev,
-      schedule: prev.schedule.map((row, i) =>
-        i === index ? { ...row, ...patch } : row,
-      ),
-    }))
-  }
-
-  function addScheduleRow() {
-    setChurchForm((prev) => ({
-      ...prev,
-      schedule: [...prev.schedule, { day: "", times: [""] }],
-    }))
-  }
-
-  function removeScheduleRow(index: number) {
-    setChurchForm((prev) => ({
-      ...prev,
-      schedule: prev.schedule.filter((_, i) => i !== index),
-    }))
-  }
-
-  function handleSaveChurch() {
-    if (!churchForm.church.trim()) {
-      toast.error("Church name is required")
+  function handleSaveRow() {
+    const day = rowForm.day.trim()
+    if (!day) {
+      toast.error("Day is required")
       return
     }
-    // sanitize: trim times, drop empties
-    const cleaned: ChurchForm = {
-      ...churchForm,
-      schedule: churchForm.schedule
-        .map((row) => ({
-          day: row.day.trim(),
-          times: row.times.map((t) => t.trim()).filter(Boolean),
-        }))
-        .filter((row) => row.day && row.times.length > 0),
-    }
-    if (cleaned.schedule.length === 0) {
-      toast.error("Add at least one schedule entry with a day and time")
+    const times = rowForm.times.map((t) => t.trim()).filter(Boolean)
+    if (times.length === 0) {
+      toast.error("Add at least one mass time")
       return
     }
-    if (editingChurchId) {
-      updateMassChurch(editingChurchId, cleaned)
-      toast.success("Mass schedule updated")
+    const cleaned: RowForm = { day, times, note: rowForm.note.trim() }
+    if (editingRowId) {
+      updateMassRow(editingRowId, cleaned)
+      toast.success("Schedule updated")
     } else {
-      addMassChurch(cleaned)
-      toast.success("Church added")
+      addMassRow(cleaned)
+      toast.success("Schedule entry added")
     }
-    setChurchDialogOpen(false)
+    setRowDialogOpen(false)
   }
 
-  function confirmDeleteChurch() {
-    if (deleteChurchId) {
-      deleteMassChurch(deleteChurchId)
-      toast.success("Church removed")
-      setDeleteChurchId(null)
+  function confirmDeleteRow() {
+    if (deleteRowId) {
+      deleteMassRow(deleteRowId)
+      toast.success("Schedule entry removed")
+      setDeleteRowId(null)
     }
   }
 
@@ -240,13 +183,13 @@ export default function MassTimesAdminPage() {
             Mass Times
           </h1>
           <p className="mt-1 text-muted-foreground">
-            Manage the mass schedule for every church and upcoming special
-            celebrations.
+            Manage the general weekly mass schedule and upcoming special
+            celebrations shown on the website.
           </p>
         </div>
-        <Button onClick={openCreateChurch}>
+        <Button onClick={openCreateRow}>
           <Plus className="h-4 w-4" />
-          Add Church
+          Add Schedule Entry
         </Button>
       </div>
 
@@ -255,13 +198,13 @@ export default function MassTimesAdminPage() {
         <Card>
           <CardContent className="flex items-center gap-4 p-6">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Church className="h-6 w-6" />
+              <Calendar className="h-6 w-6" />
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">
-                {massChurches.length}
+                {massSchedule.length}
               </p>
-              <p className="text-sm text-muted-foreground">Churches</p>
+              <p className="text-sm text-muted-foreground">Schedule entries</p>
             </div>
           </CardContent>
         </Card>
@@ -293,96 +236,71 @@ export default function MassTimesAdminPage() {
         </Card>
       </div>
 
-      {/* Search */}
-      <div className="relative w-full sm:max-w-xs">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder="Search churches..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-9"
-        />
-      </div>
-
-      {/* Church schedule grid */}
-      {filtered.length > 0 ? (
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {filtered.map((church) => (
-            <Card key={church.id} className="flex flex-col">
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <CardTitle className="font-serif text-lg leading-tight">
-                      {church.church}
-                    </CardTitle>
-                    <p
-                      className="mt-1 text-sm text-muted-foreground"
-                      dir="rtl"
-                    >
-                      {church.churchAr}
-                    </p>
+      {/* Weekly schedule */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-serif">Weekly Schedule</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          {massSchedule.length > 0 ? (
+            massSchedule.map((row) => (
+              <div
+                key={row.id}
+                className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <Calendar className="h-5 w-5" />
                   </div>
-                  <Badge variant="outline" className="flex shrink-0 items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    {church.location}
-                  </Badge>
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground">{row.day}</p>
+                    {row.note && (
+                      <p className="text-sm text-muted-foreground">
+                        {row.note}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent className="flex flex-1 flex-col">
-                <div className="space-y-2">
-                  {church.schedule.map((row, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-start justify-between gap-2 border-b border-border py-2 last:border-0"
+                <div className="flex items-center justify-between gap-3 sm:justify-end">
+                  <div className="flex flex-wrap gap-1 sm:justify-end">
+                    {row.times.map((time, idx) => (
+                      <Badge key={idx} variant="secondary">
+                        {time}
+                      </Badge>
+                    ))}
+                  </div>
+                  <div className="flex shrink-0 gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => openEditRow(row)}
+                      aria-label="Edit schedule entry"
                     >
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        <span className="text-sm font-medium">{row.day}</span>
-                      </div>
-                      <div className="flex flex-wrap justify-end gap-1">
-                        {row.times.map((time, tidx) => (
-                          <Badge key={tidx} variant="secondary">
-                            {time}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setDeleteRowId(row.id)}
+                      aria-label="Delete schedule entry"
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="mt-3 flex items-center gap-2 border-t border-dashed pt-3 text-sm">
-                  <Church className="h-4 w-4 shrink-0 text-secondary" />
-                  <span className="text-muted-foreground">Confession:</span>
-                  <span className="font-medium">{church.confession || "—"}</span>
-                </div>
-                <div className="mt-4 flex justify-end gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => openEditChurch(church)}
-                    aria-label="Edit church schedule"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setDeleteChurchId(church.id)}
-                    aria-label="Delete church"
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-lg border border-dashed py-16 text-center">
-          <Church className="mx-auto mb-3 h-12 w-12 text-muted-foreground/30" />
-          <p className="text-sm text-muted-foreground">No churches found.</p>
-        </div>
-      )}
+              </div>
+            ))
+          ) : (
+            <div className="rounded-lg border border-dashed py-16 text-center">
+              <Clock className="mx-auto mb-3 h-12 w-12 text-muted-foreground/30" />
+              <p className="text-sm text-muted-foreground">
+                No schedule entries yet.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Separator />
 
@@ -436,15 +354,17 @@ export default function MassTimesAdminPage() {
                   <h3 className="mt-3 font-serif text-lg font-semibold">
                     {mass.title}
                   </h3>
-                  <div className="mt-2 space-y-1.5 text-sm text-muted-foreground">
+                  <div className="mt-2 flex flex-col gap-1.5 text-sm text-muted-foreground">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 shrink-0" />
                       {mass.date}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 shrink-0" />
-                      {mass.location}
-                    </div>
+                    {mass.location && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 shrink-0" />
+                        {mass.location}
+                      </div>
+                    )}
                   </div>
                   <p className="mt-3 text-sm text-muted-foreground">
                     {mass.description}
@@ -463,139 +383,61 @@ export default function MassTimesAdminPage() {
         )}
       </div>
 
-      {/* ---------- Church Add/Edit Dialog ---------- */}
-      <Dialog open={churchDialogOpen} onOpenChange={setChurchDialogOpen}>
+      {/* ---------- Schedule Add/Edit Dialog ---------- */}
+      <Dialog open={rowDialogOpen} onOpenChange={setRowDialogOpen}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="font-serif">
-              {editingChurchId ? "Edit Mass Schedule" : "Add Church"}
+              {editingRowId ? "Edit Schedule Entry" : "Add Schedule Entry"}
             </DialogTitle>
             <DialogDescription>
-              These fields match the public mass schedule on the website.
+              A day (or range of days) and the mass times offered.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-2">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="church">Church Name (English)</Label>
+              <Label htmlFor="day">Day</Label>
               <Input
-                id="church"
-                value={churchForm.church}
+                id="day"
+                value={rowForm.day}
                 onChange={(e) =>
-                  setChurchForm({ ...churchForm, church: e.target.value })
+                  setRowForm({ ...rowForm, day: e.target.value })
                 }
-                placeholder="Mar Mama Church"
+                placeholder="e.g. Sunday or Monday - Friday"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="churchAr">Church Name (Arabic)</Label>
+              <Label htmlFor="times">Mass Times</Label>
               <Input
-                id="churchAr"
-                dir="rtl"
-                value={churchForm.churchAr}
+                id="times"
+                value={rowForm.times.join(", ")}
                 onChange={(e) =>
-                  setChurchForm({ ...churchForm, churchAr: e.target.value })
+                  setRowForm({ ...rowForm, times: e.target.value.split(",") })
                 }
-                placeholder="كنيسة مار ماما"
+                placeholder="Comma separated (e.g. 8:00 AM, 10:30 AM, 6:00 PM)"
               />
+              <p className="text-xs text-muted-foreground">
+                Separate multiple times with commas.
+              </p>
             </div>
             <div className="flex flex-col gap-2">
-              <Label>Location</Label>
-              <Select
-                value={churchForm.location}
-                onValueChange={(v) =>
-                  setChurchForm({ ...churchForm, location: v })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {massLocations.map((loc) => (
-                    <SelectItem key={loc} value={loc}>
-                      {loc}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Schedule editor */}
-            <div className="flex flex-col gap-2">
-              <Label>Weekly Schedule</Label>
-              <div className="flex flex-col gap-3">
-                {churchForm.schedule.map((row, index) => (
-                  <div
-                    key={index}
-                    className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-3"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Input
-                        value={row.day}
-                        onChange={(e) =>
-                          updateScheduleRow(index, { day: e.target.value })
-                        }
-                        placeholder="Day (e.g. Sunday)"
-                        className="bg-background"
-                      />
-                      {churchForm.schedule.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="shrink-0 text-muted-foreground hover:text-destructive"
-                          onClick={() => removeScheduleRow(index)}
-                          aria-label="Remove schedule row"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                    <Input
-                      value={row.times.join(", ")}
-                      onChange={(e) =>
-                        updateScheduleRow(index, {
-                          times: e.target.value.split(","),
-                        })
-                      }
-                      placeholder="Times, comma separated (e.g. 8:00 AM, 10:30 AM)"
-                      className="bg-background"
-                    />
-                  </div>
-                ))}
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addScheduleRow}
-                className="self-start"
-              >
-                <Plus className="h-4 w-4" />
-                Add Day
-              </Button>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="confession">Confession</Label>
+              <Label htmlFor="note">Note (optional)</Label>
               <Input
-                id="confession"
-                value={churchForm.confession}
+                id="note"
+                value={rowForm.note}
                 onChange={(e) =>
-                  setChurchForm({ ...churchForm, confession: e.target.value })
+                  setRowForm({ ...rowForm, note: e.target.value })
                 }
-                placeholder="Saturday 5:00 PM - 6:00 PM"
+                placeholder="e.g. Main parish liturgy"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setChurchDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setRowDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveChurch}>
-              {editingChurchId ? "Save Changes" : "Add Church"}
+            <Button onClick={handleSaveRow}>
+              {editingRowId ? "Save Changes" : "Add Entry"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -609,47 +451,47 @@ export default function MassTimesAdminPage() {
               {editingSpecialId ? "Edit Celebration" : "Add Celebration"}
             </DialogTitle>
             <DialogDescription>
-              Feast days and special masses highlighted on the website.
+              Feast days and special masses shown on the website.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-2">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="special-title">Title</Label>
+              <Label htmlFor="title">Title</Label>
               <Input
-                id="special-title"
+                id="title"
                 value={specialForm.title}
                 onChange={(e) =>
                   setSpecialForm({ ...specialForm, title: e.target.value })
                 }
-                placeholder="Easter Triduum"
+                placeholder="Feast of Mar Mama"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="special-date">Date</Label>
+              <Label htmlFor="date">Date</Label>
               <Input
-                id="special-date"
+                id="date"
                 value={specialForm.date}
                 onChange={(e) =>
                   setSpecialForm({ ...specialForm, date: e.target.value })
                 }
-                placeholder="April 17-20, 2026"
+                placeholder="August 2, 2026"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="special-location">Location</Label>
+              <Label htmlFor="location">Location</Label>
               <Input
-                id="special-location"
+                id="location"
                 value={specialForm.location}
                 onChange={(e) =>
                   setSpecialForm({ ...specialForm, location: e.target.value })
                 }
-                placeholder="All Churches"
+                placeholder="Mar Mama Church, Ehden"
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="special-description">Description</Label>
+              <Label htmlFor="description">Description</Label>
               <Textarea
-                id="special-description"
+                id="description"
                 value={specialForm.description}
                 onChange={(e) =>
                   setSpecialForm({
@@ -657,7 +499,7 @@ export default function MassTimesAdminPage() {
                     description: e.target.value,
                   })
                 }
-                placeholder="Holy Thursday, Good Friday, and Easter Vigil services"
+                placeholder="Special celebration details..."
                 rows={3}
               />
             </div>
@@ -678,21 +520,21 @@ export default function MassTimesAdminPage() {
 
       {/* ---------- Delete confirmations ---------- */}
       <AlertDialog
-        open={deleteChurchId !== null}
-        onOpenChange={(open) => !open && setDeleteChurchId(null)}
+        open={deleteRowId !== null}
+        onOpenChange={(open) => !open && setDeleteRowId(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this church?</AlertDialogTitle>
+            <AlertDialogTitle>Delete schedule entry?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The church and its full mass
-              schedule will be permanently removed.
+              This will remove this entry from the weekly schedule. This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmDeleteChurch}
+              onClick={confirmDeleteRow}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
@@ -707,10 +549,10 @@ export default function MassTimesAdminPage() {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete this celebration?</AlertDialogTitle>
+            <AlertDialogTitle>Delete celebration?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. The special celebration will be
-              permanently removed.
+              This will remove the special celebration from the website. This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

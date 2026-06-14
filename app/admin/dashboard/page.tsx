@@ -7,6 +7,7 @@ import {
   Camera,
   Video,
   Clock,
+  Church,
   ArrowRight,
   Plus,
   CheckCircle2,
@@ -185,6 +186,12 @@ export default function DashboardOverviewPage() {
               <Link href="/admin/dashboard/mass-times">
                 <Clock className="h-4 w-4" />
                 Manage Mass Times
+              </Link>
+            </Button>
+            <Button asChild variant="outline" className="justify-start">
+              <Link href="/admin/dashboard/churches">
+                <Church className="h-4 w-4" />
+                Manage Churches
               </Link>
             </Button>
             <Button asChild variant="outline" className="justify-start">
