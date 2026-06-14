@@ -16,6 +16,8 @@ import {
   Settings,
   LogOut,
   ChevronRight,
+  LayoutDashboard,
+  ExternalLink,
 } from "lucide-react"
 import {
   Sidebar,
@@ -48,7 +50,7 @@ type NavItem = {
 }
 
 const navItems: NavItem[] = [
-  { title: "Home", href: "/admin/dashboard", icon: Home },
+  { title: "Home", href: "/admin/dashboard/home", icon: Home },
   {
     title: "About",
     href: "/admin/dashboard/about",
@@ -107,6 +109,7 @@ const navItems: NavItem[] = [
 
 const secondaryItems = [
   { title: "Settings", href: "/admin/dashboard/settings", icon: Settings },
+  { title: "View Website", href: "/", icon: ExternalLink },
 ]
 
 export function AdminSidebar() {
@@ -147,6 +150,27 @@ export function AdminSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
+          <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === "/admin/dashboard"}
+                  tooltip="Overview"
+                >
+                  <Link href="/admin/dashboard">
+                    <LayoutDashboard className="h-4 w-4" />
+                    <span>Overview</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Pages</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) =>
