@@ -54,6 +54,41 @@ import {
   type MassScheduleRow,
 } from "@/components/admin/admin-data"
 
+// ---------- Options ----------
+const DAY_OPTIONS = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Daily",
+  "Weekdays",
+  "Mon - Fri",
+  "Sat - Sun",
+]
+
+const HOUR_OPTIONS = Array.from({ length: 12 }, (_, i) => String(i + 1))
+const MINUTE_OPTIONS = ["00", "15", "30", "45"]
+const PERIOD_OPTIONS = ["AM", "PM"]
+
+function parseTime(value: string) {
+  const match = value.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i)
+  if (match) {
+    return {
+      hour: match[1],
+      minute: match[2],
+      period: match[3].toUpperCase(),
+    }
+  }
+  return { hour: "8", minute: "00", period: "AM" }
+}
+
+function formatTime(hour: string, minute: string, period: string) {
+  return `${hour}:${minute} ${period}`
+}
+
 // ---------- Church form ----------
 type ChurchForm = Omit<MassChurchItem, "id">
 
@@ -153,6 +188,40 @@ export default function MassTimesAdminPage() {
     }))
   }
 
+  function setTime(rowIndex: number, timeIndex: number, value: string) {
+    setChurchForm((prev) => ({
+      ...prev,
+      schedule: prev.schedule.map((row, i) =>
+        i === rowIndex
+          ? {
+              ...row,
+              times: row.times.map((t, ti) => (ti === timeIndex ? value : t)),
+            }
+          : row,
+      ),
+    }))
+  }
+
+  function addTime(rowIndex: number) {
+    setChurchForm((prev) => ({
+      ...prev,
+      schedule: prev.schedule.map((row, i) =>
+        i === rowIndex ? { ...row, times: [...row.times, "8:00 AM"] } : row,
+      ),
+    }))
+  }
+
+  function removeTime(rowIndex: number, timeIndex: number) {
+    setChurchForm((prev) => ({
+      ...prev,
+      schedule: prev.schedule.map((row, i) =>
+        i === rowIndex
+          ? { ...row, times: row.times.filter((_, ti) => ti !== timeIndex) }
+          : row,
+      ),
+    }))
+  }
+
   function handleSaveChurch() {
     if (!churchForm.church.trim()) {
       toast.error("Church name is required")
@@ -233,37 +302,16 @@ export default function MassTimesAdminPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      {/* Hero banner — mirrors the public Mass Times page */}
-      <div className="relative overflow-hidden rounded-2xl bg-primary px-6 py-10 text-primary-foreground shadow-lg sm:px-10">
-        <Clock
-          className="pointer-events-none absolute -right-6 -top-6 h-48 w-48 rotate-12 opacity-10"
-          aria-hidden="true"
-        />
-        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <Badge variant="secondary" className="mb-3">
-              Join Us in Prayer
-            </Badge>
-            <h1 className="font-serif text-3xl font-bold sm:text-4xl">
-              Mass Times
-            </h1>
-            <p className="mt-2 text-xl font-light text-secondary" dir="rtl">
-              مواعيد القداس
-            </p>
-            <p className="mt-3 max-w-xl text-sm text-primary-foreground/80">
-              Manage the mass schedule for every church and the upcoming special
-              celebrations shown on the website.
-            </p>
-          </div>
-          <Button
-            onClick={openCreateChurch}
-            size="lg"
-            className="bg-secondary text-secondary-foreground shadow-md hover:bg-secondary/90"
-          >
-            <Plus className="h-4 w-4" />
-            Add Church
-          </Button>
-        </div>
+      {/* Header */}
+      <div className="flex items-center justify-end">
+        <Button
+          onClick={openCreateChurch}
+          size="lg"
+          className="bg-secondary text-secondary-foreground shadow-md hover:bg-secondary/90"
+        >
+          <Plus className="h-4 w-4" />
+          Add Church
+        </Button>
       </div>
 
       {/* Stats */}
@@ -539,14 +587,23 @@ export default function MassTimesAdminPage() {
                     className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-3"
                   >
                     <div className="flex items-center gap-2">
-                      <Input
-                        value={row.day}
-                        onChange={(e) =>
-                          updateScheduleRow(index, { day: e.target.value })
+                      <Select
+                        value={row.day || undefined}
+                        onValueChange={(v) =>
+                          updateScheduleRow(index, { day: v })
                         }
-                        placeholder="Day (e.g. Sunday)"
-                        className="bg-background"
-                      />
+                      >
+                        <SelectTrigger className="bg-background">
+                          <SelectValue placeholder="Select day" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {DAY_OPTIONS.map((day) => (
+                            <SelectItem key={day} value={day}>
+                              {day}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       {churchForm.schedule.length > 1 && (
                         <Button
                           type="button"
@@ -560,16 +617,104 @@ export default function MassTimesAdminPage() {
                         </Button>
                       )}
                     </div>
-                    <Input
-                      value={row.times.join(", ")}
-                      onChange={(e) =>
-                        updateScheduleRow(index, {
-                          times: e.target.value.split(","),
-                        })
-                      }
-                      placeholder="Times, comma separated (e.g. 8:00 AM, 10:30 AM)"
-                      className="bg-background"
-                    />
+                    <div className="flex flex-col gap-2">
+                      <span className="text-xs font-medium text-muted-foreground">
+                        Mass times
+                      </span>
+                      {row.times.map((time, tIdx) => {
+                        const parsed = parseTime(time)
+                        return (
+                          <div key={tIdx} className="flex items-center gap-1.5">
+                            <Select
+                              value={parsed.hour}
+                              onValueChange={(v) =>
+                                setTime(
+                                  index,
+                                  tIdx,
+                                  formatTime(v, parsed.minute, parsed.period),
+                                )
+                              }
+                            >
+                              <SelectTrigger className="bg-background">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {HOUR_OPTIONS.map((h) => (
+                                  <SelectItem key={h} value={h}>
+                                    {h}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <span className="text-muted-foreground">:</span>
+                            <Select
+                              value={parsed.minute}
+                              onValueChange={(v) =>
+                                setTime(
+                                  index,
+                                  tIdx,
+                                  formatTime(parsed.hour, v, parsed.period),
+                                )
+                              }
+                            >
+                              <SelectTrigger className="bg-background">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {MINUTE_OPTIONS.map((m) => (
+                                  <SelectItem key={m} value={m}>
+                                    {m}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Select
+                              value={parsed.period}
+                              onValueChange={(v) =>
+                                setTime(
+                                  index,
+                                  tIdx,
+                                  formatTime(parsed.hour, parsed.minute, v),
+                                )
+                              }
+                            >
+                              <SelectTrigger className="bg-background">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {PERIOD_OPTIONS.map((p) => (
+                                  <SelectItem key={p} value={p}>
+                                    {p}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {row.times.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="shrink-0 text-muted-foreground hover:text-destructive"
+                                onClick={() => removeTime(index, tIdx)}
+                                aria-label="Remove time"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        )
+                      })}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => addTime(index)}
+                        className="self-start text-primary hover:text-primary"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        Add Time
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
