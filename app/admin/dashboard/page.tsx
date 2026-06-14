@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge"
 import { useAdminData } from "@/components/admin/admin-data"
 
 export default function DashboardOverviewPage() {
-  const { news, photos, videos, massChurches } = useAdminData()
+  const { news, photos, videos, churches } = useAdminData()
 
   const published = news.filter((n) => n.status === "published").length
   const drafts = news.filter((n) => n.status === "draft").length
@@ -32,10 +32,10 @@ export default function DashboardOverviewPage() {
   const stats = [
     {
       label: "Churches",
-      value: massChurches.length,
-      icon: Clock,
-      href: "/admin/dashboard/mass-times",
-      hint: "Mass schedules",
+      value: churches.length,
+      icon: Church,
+      href: "/admin/dashboard/churches",
+      hint: "Churches & holy sites",
     },
     {
       label: "News Articles",
