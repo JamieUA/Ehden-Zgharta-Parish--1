@@ -12,10 +12,6 @@ import {
   Settings,
   LogOut,
   ExternalLink,
-  Church,
-  BookOpen,
-  UserRound,
-  Star,
 } from "lucide-react"
 import {
   Sidebar,
@@ -37,17 +33,6 @@ const navItems = [
   { title: "News & Articles", href: "/admin/dashboard/news", icon: Newspaper },
   { title: "Photo Gallery", href: "/admin/dashboard/gallery", icon: Camera },
   { title: "Videos", href: "/admin/dashboard/videos", icon: Video },
-]
-
-const aboutItems = [
-  { title: "The Parish", href: "/admin/dashboard/about/parish", icon: Church },
-  { title: "History", href: "/admin/dashboard/about/history", icon: BookOpen },
-  { title: "The Vicar", href: "/admin/dashboard/about/vicar", icon: UserRound },
-  {
-    title: "Blessed Patriarch Douaihy",
-    href: "/admin/dashboard/about/patriarch",
-    icon: Star,
-  },
 ]
 
 const secondaryItems = [
@@ -93,28 +78,6 @@ export function AdminSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.href)}
-                    tooltip={item.title}
-                  >
-                    <Link href={item.href}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel>About Pages</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {aboutItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
